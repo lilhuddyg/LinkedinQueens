@@ -106,14 +106,20 @@ def extract_board(img, bbox, n):
 
     samples = np.array(samples)
 
-    # Farthest-point sampling: pick N palette colors maximally spread in RGB space
-    palette = [samples[0]]
-    for _ in range(n - 1):
-        dists = np.min([np.linalg.norm(samples - p, axis=1) for p in palette], axis=0)
-        palette.append(samples[np.argmax(dists)])
+    # Quantize to collapse near-identical colors (e.g. orange variants)
+    # then get unique quantized colors as palette candidates
+    quantized = (samples / 15).astype(int)
+    unique_quantized = np.unique(quantized, axis=0).astype(float) * 15
+
+    # Farthest-point on the reduced unique set
+    mean = unique_quantized.mean(axis=0)
+    start_idx = np.argmax(np.linalg.norm(unique_quantized - mean, axis=1))
+    palette = [unique_quantized[start_idx]]
+    for _ in range(min(n - 1, len(unique_quantized) - 1)):
+        dists = np.min([np.linalg.norm(unique_quantized - p, axis=1) for p in palette], axis=0)
+        palette.append(unique_quantized[np.argmax(dists)])
 
     palette = np.array(palette)
-    #print("Palette RGB:", [p.astype(int).tolist() for p in palette], flush=True)
 
     # Assign each cell to nearest palette color
     labels = []
@@ -130,19 +136,21 @@ def extract_board(img, bbox, n):
 # ── Output ────────────────────────────────────────────────────────────────────
 
 def print_board(board):
-    for row in board:
+    for i,row in enumerate(board):
         print(row, flush=True)
 
 
 def boards_equal(a, b):
     if a is None or b is None:
         return False
+    if len(a) != len(b) or len(a[0]) != len(b[0]):
+        return False
     return all(a[r][c] == b[r][c] for r in range(len(a)) for c in range(len(a[r])))
 
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
 
-def main(poll_interval=1.5):
+def main(poll_interval=0):
     print("Monitoring screen for LinkedIn Queens puzzle... (Ctrl+C to stop)\n", flush=True)
     last_board = None
 

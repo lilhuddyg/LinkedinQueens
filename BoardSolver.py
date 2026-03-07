@@ -5,15 +5,19 @@ class Solver:
         self.n = n
         self.diags = [[1, 1], [1,-1], [-1,1], [-1,-1]]
 
+        
         self.board = [
-            ["1", "1", "1", "1", "1", "1", "2"],
-            ["1", "5", "3", "4", "4", "4", "2"],
-            ["1", "5", "3", "3", "3", "4", "2"],
-            ["1", "5", "5", "6", "3", "4", "2"],
-            ["1", "7", "5", "6", "6", "6", "2"],
-            ["1", "7", "7", "7", "7", "6", "2"],
-            ["1", "2", "2", "2", "2", "2", "2"]
+            ['1', '1', '1', '7', '7', '2', '2'],
+['1', '4', '1', '5', '7', '3', '2'],
+['4', '4', '1', '5', '3', '3', '2'],
+['6', '4', '1', '1', '1', '3', '2'],
+['6', '4', '1', '1', '1', '3', '2'],
+['4', '4', '4', '1', '3', '3', '3'],
+['1', '1', '1', '1', '1', '1', '1']
         ]
+        
+        # Only for manual testing
+        self.n = len(self.board)
 
     # Iterates through columns recursively, fills in rows with loop
     def solveHelper(self, col, rowsUsed, colorsUsed, placedQueens):
@@ -52,23 +56,33 @@ class Solver:
             print(row)
         print()
 
-    def solve(self):
-        print("This is the raw puzzle:")
-        self.print()  
+    def solve(self, board=None):
+        if board is not None:
+            self.board = board
+            self.n = len(board)
 
-        res = solver.solveHelper(col=0, rowsUsed=set(), colorsUsed=set(), placedQueens=set())
+        #print("This is the raw puzzle:")
+        #self.print()  
+
+        res = self.solveHelper(col=0, rowsUsed=set(), colorsUsed=set(), placedQueens=set())
         if not res:
             print("There was no solution findable.")
+            return None
         else: #Print the queens with reversed coordinate order
             print("Placed Queens: ", end = "")
             formattedQueens = sorted([[y,x] for x,y in res], key=lambda x: x[0])
             print(formattedQueens)
 
-        # Write the solution to the board
+        toReturn = res
+
+        # Display the solution with Q's in it
+        display = [row[:] for row in self.board]  # shallow copy of each row
         for queen in res:
-            self.board[queen[0]][queen[1]] = "Q"
-        self.print()
+            display[queen[0]][queen[1]] = "Q"
+        for row in display:
+            print(row)
 
-
-solver = Solver(7)
-solver.solve()
+        return res
+        
+#solver = Solver(7)
+#solver.solve()
